@@ -1,0 +1,28 @@
+spring:
+  # 数据库连接核心配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/BlogSystem?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 7777
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.0+ 驱动类名（固定）
+
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql #仅执行数据脚本，表由JAR自动生成
+
+  # JPA 配置（优化 ORM 映射、SQL 日志等）
+  jpa:
+    hibernate:
+      # 自动更新表结构（关键！如果 DataGrip 中表字段和实体类不一致，会自动同步，开发时用）
+      ddl-auto: update
+    properties:
+      hibernate:
+        # 打印执行的 SQL 日志（开发时方便调试，看 JPA 自动生成的 SQL）
+        show_sql: true
+        # 格式化 SQL 日志（更易读）
+        format_sql: true
+        # 数据库方言（告诉 JPA 适配 MySQL 8.0+）
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    # 实体类包扫描（告诉 JPA 哪里是实体类）
+    base-packages: com.blog.entity
