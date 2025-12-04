@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 1. 继承 Spring Boot 父工程（核心！自动管理依赖版本，避免冲突） -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version> <!-- 最新稳定版，适配所有依赖 -->
+        <relativePath/>
+    </parent>
+
+    <!-- 你的项目基本信息（保持不变） -->
+    <groupId>org.example</groupId>
+    <artifactId>BlogSystem</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <!-- JDK 版本：Spring Boot 3.x JDK21 -->
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lombok.version>1.18.32</lombok.version>
+    </properties>
+
+    <dependencies>
+        <!-- 2. Spring Boot Web 核心（启动服务器、处理 HTTP 请求） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- 3. Spring Data JPA（数据库映射 + 增删改查，对应你的 User 实体类） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- 4. MySQL 驱动（连接你在 DataGrip 中创建的数据库） -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope> <!-- 运行时生效，无需编译时依赖 -->
+        </dependency>
+
+        <!-- 5. Lombok（简化实体类代码，支持 @Data @Builder @NoArgsConstructor 等注解） -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- 6. Spring Security（用户认证，因为你的 User 实现了 UserDetails 接口） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- 7. 测试依赖（单元测试用，比如验证数据库连接） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope> <!-- 仅测试环境生效 -->
+        </dependency>
+
+        <!-- 8. JSON 处理（返回前端 JSON 数据，自动转换实体类） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+    </dependencies>
+
+    <!-- 9. 打包插件（将项目打成可运行的 JAR 包，部署时用） -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- 排除 Lombok 插件，避免打包冲突 -->
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
