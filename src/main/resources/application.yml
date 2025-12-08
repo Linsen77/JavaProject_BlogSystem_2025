@@ -3,7 +3,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/BlogSystem?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: 7777777
+    password: lsx123456
     driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.0+ 驱动类名（固定）
 
   sql:
