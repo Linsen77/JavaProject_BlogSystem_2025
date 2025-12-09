@@ -1,15 +1,39 @@
 spring:
   # 数据库连接核心配置
   datasource:
-    url: jdbc:mysql://localhost:3306/BlogSystem?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/BlogSystem?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: lsx123456
+    password: 7777777
     driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.0+ 驱动类名（固定）
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 20
+      minimum-idle: 5
+
 
   sql:
     init:
       mode: never
       data-locations: classpath:data.sql #仅执行数据脚本，表由JAR自动生成
+
+
+    # 邮件配置（QQ邮箱）
+  mail:
+    host: smtp.qq.com       # 固定值
+    port: 587               # 固定值
+    username: 3313251044@qq.com # 我的QQ邮箱地址
+    password: sqycmffrbgygdaae # 我的QQ邮箱SMTP授权码（不是登录密码！）
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          ssl:
+            enable: true
+          auth: true
+          starttls:
+            enable: true
+        debug: true
+
 
   # JPA 配置（优化 ORM 映射、SQL 日志等）
   jpa:
@@ -27,17 +51,8 @@ spring:
     # 实体类包扫描（告诉 JPA 哪里是实体类）
     base-packages: com.blog.entity
 
-    # 邮件配置（QQ邮箱）
-    mail:
-      host: smtp.qq.com       # 固定值
-      port: 587               # 固定值
-      username: 3313251044@qq.com # 我的QQ邮箱地址
-      password: sqycmffrbgygdaae # 我的QQ邮箱SMTP授权码（不是登录密码！）
-      default-encoding: UTF-8
-      properties:
-        mail:
-          smtp:
-            auth: true
-            starttls:
-              enable: true
-              required: true
+  # 日志配置
+  logging:
+    level:
+      com.blog.mapper: debug  # 打印SQL语句
+      org.springframework.jdbc: debug

@@ -5,7 +5,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 //邮箱发送工具类
 @Component
@@ -23,9 +23,9 @@ public class EmailUtils {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail); // 发件人
         message.setTo(toEmail);     // 收件人
-        message.setSubject("博客注册验证码"); // 邮件标题
+        message.setSubject("blogsystem注册验证码"); // 邮件标题
         // 邮件内容
-        message.setText("验证码：" + code + "\n该验证码5分钟内有效。");
+        message.setText("验证码：" + code + "\n该验证码5分钟内有效");
 
         // 发送邮件
         mailSender.send(message);
