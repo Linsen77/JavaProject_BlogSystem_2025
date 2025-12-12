@@ -1,8 +1,15 @@
 package com.blog.controller;
 
 import com.blog.entity.Article;
+import com.blog.entity.Comment;
+import com.blog.entity.Likes;
+import com.blog.entity.User;
 import com.blog.service.ArticleService;
+import com.blog.service.CommentService;
+import com.blog.service.LikeService;
+import com.blog.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +21,15 @@ public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+
+    @Autowired
+    private CommentService commentService;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private LikeService likeService;
 
     //创建或更新文章
     @PostMapping
@@ -35,7 +51,7 @@ public class ArticleController {
 
     //根据作者获取文章
     @GetMapping("/author/{author}")
-    public List<Article> getArticleByAuthor(@PathVariable String author)
+    public List<Article> getArticleByAuthor(@PathVariable User author)
     {
         return articleService.getArticleByAuthor(author);
     }
@@ -44,5 +60,33 @@ public class ArticleController {
     @DeleteMapping("/{id}")
     public void deleteArticle(@PathVariable Long id){
         articleService.deleteArticle(id);
+    }
+
+
+
+    @PostMapping("/{articleId}/comments")
+    public ResponseEntity<Comment> addComment(@PathVariable Long articleId, @RequestParam Long userId, @RequestParam String content){
+
+        //调佣CommentService添加评论
+        Comment comment = commentService.addComment(articleId, userId, content);
+
+        //调用notificationService推送通知
+        Article article = comment.getArticle();
+        notificationService.sendNotificationToAuthor(article.getAuthor(), "你的文章收到了新评论！");
+
+        return ResponseEntity.ok(comment);
+    }
+
+    @PostMapping("/{articleId}/likes")
+    public ResponseEntity<Likes> addLike(@PathVariable Long articleId, @RequestParam Long userId){
+
+        //调佣LikeService来添加点赞
+        Likes like = likeService.addLike(articleId, userId);
+
+        //调用notificationService来推送通知
+        Article article = like.getArticle();
+        notificationService.sendNotificationToAuthor(article.getAuthor(), "你收获了一条点赞~");
+
+        return ResponseEntity.ok(like);
     }
 }

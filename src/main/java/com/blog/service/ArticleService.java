@@ -1,6 +1,7 @@
 package com.blog.service;
 
 import com.blog.entity.Article;
+import com.blog.entity.User;
 import com.blog.repository.ArticleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,12 +35,21 @@ public class ArticleService {
     }
 
     //根据作者获取文章
-    public List<Article>getArticleByAuthor(String author){
+    public List<Article>getArticleByAuthor(User author){
         return articleRepository.findByAuthor(author); //根据作者查找文章
     }
 
     //删除文章
     public void deleteArticle(Long id){
         articleRepository.deleteById(id);
+    }
+
+    //查看粉丝可见的文章
+    public List<Article> findVisibleToFollowers(Long authorId) {
+        return articleRepository.findVisibleToFollowers(authorId);
+    }
+
+    public List<Article> findByAuthorIdAndVisibility(Long authorId, Article.ArticleVisibility visibility) {
+        return articleRepository.findByAuthorIdAndVisibility(authorId, visibility);
     }
 }

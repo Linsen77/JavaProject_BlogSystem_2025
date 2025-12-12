@@ -16,7 +16,10 @@ public class Article {
 
     private String title; //文章标题
     private String content; //文章内容，使用markdown 格式
-    private String author; //作者
+
+    @ManyToOne
+    @JoinColumn(name = "author_id")  // author_id 外键
+    private User author;//作者
 
     @Enumerated(EnumType.STRING)
     private ArticleVisibility visibility; //文章公开性：公开、仅粉丝、私人
