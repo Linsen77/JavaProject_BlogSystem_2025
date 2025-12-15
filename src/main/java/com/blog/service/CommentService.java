@@ -41,7 +41,7 @@ public class CommentService {
         //保存评论
         Comment savedComment = commentRepository.save(comment);
 
-        //发送通知
+        //发送通知给作者
         notificationService.sendNotificationToAuthor(article.getAuthor(), "收到一条评论~");
 
         return savedComment;
