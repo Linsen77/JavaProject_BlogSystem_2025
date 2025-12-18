@@ -4,7 +4,7 @@ spring:
     url: jdbc:mysql://localhost:3306/BlogSystem?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: 7777777
-    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.0+ 驱动类名（固定）
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.0 驱动类名（固定）
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 20

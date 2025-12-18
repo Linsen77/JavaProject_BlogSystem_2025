@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.5</version> <!-- 最新稳定版，适配所有依赖 -->
+        <version>3.2.5</version>
         <relativePath/>
     </parent>
 
@@ -18,7 +18,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <!-- JDK 版本：Spring Boot 3.x JDK21 -->
+        <!-- JDK 版本：Spring Boot 3.2.5 JDK21 -->
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

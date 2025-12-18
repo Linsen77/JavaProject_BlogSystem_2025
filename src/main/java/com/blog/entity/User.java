@@ -9,15 +9,13 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-
+//核心表,用户核心实体
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-
-//核心表,用户核心实体
 public class User {
 
     @Id

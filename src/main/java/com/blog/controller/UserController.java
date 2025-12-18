@@ -1,6 +1,7 @@
 package com.blog.controller;
 
 import com.blog.dto.UserProfileDTO;
+import com.blog.dto.UserStatisticsDto;
 import com.blog.dto.UserUpdateDTO;
 import com.blog.entity.Article;
 import java.io.File;
@@ -9,14 +10,12 @@ import com.blog.repository.ArticleRepository;
 import com.blog.repository.UserRepository;
 import com.blog.service.ArticleService;
 import com.blog.service.FollowService;
-import com.blog.service.UserService;
-import org.springframework.aot.generate.AccessControl;
+import com.blog.service.UserStatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Path;
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +34,9 @@ public class UserController {
 
     @Autowired
     private ArticleService articleService;
+
+    @Autowired
+    private UserStatisticsService userStatisticsService;
 
     //访问某个用户主页
     @GetMapping("/{userId}/profile")
@@ -63,6 +65,13 @@ public class UserController {
     @GetMapping("/me")
     public User getCurrentUser(Principal principal){
         return userRepository.findByEmail(principal.getName());
+    }
+
+    //获取用户的文章数，粉丝数和点赞数
+    @GetMapping("/{userId}/statistics")
+    public ResponseEntity<UserStatisticsDto> getUserStatistics(@PathVariable Long userId) {
+        UserStatisticsDto statistics = userStatisticsService.getUserStatistics(userId);
+        return ResponseEntity.ok(statistics);
     }
 
     //更新当前用户资料

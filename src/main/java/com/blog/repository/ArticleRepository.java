@@ -6,12 +6,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.beans.Visibility;
+
 import java.util.List;
 
 public interface ArticleRepository extends JpaRepository<Article,Long>{
 
     List<Article> findByAuthor(User author);
+
+    // 根据作者 ID 统计文章数量
+    long countByAuthorId(Long authorId);
 
 
     List<Article>findByVisibility(Article.ArticleVisibility visibility);

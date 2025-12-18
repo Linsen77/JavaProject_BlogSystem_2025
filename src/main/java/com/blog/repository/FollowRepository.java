@@ -18,4 +18,10 @@ public interface FollowRepository extends JpaRepository<Follows, Long> {
 
     //粉丝列表
     List<Follows> findByFolloweeId(Long followeeId);
+
+    //统计粉丝数量
+    long countByFollowerId(Long followerId);
+
+    //统计关注数量
+    long countByFolloweeId(Long followeeId);
 }
