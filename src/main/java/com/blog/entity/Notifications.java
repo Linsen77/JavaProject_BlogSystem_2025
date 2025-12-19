@@ -20,7 +20,11 @@ public class Notifications {
 
     private String content;//通知内容
 
-    private boolean read;//是否已读
+    /**
+     * 是否已读
+     */
+    @Column(name = "is_read")
+    private boolean readFlag;//是否已读
 
     private LocalDateTime createtime;//通知时间
 

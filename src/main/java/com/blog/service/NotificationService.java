@@ -25,7 +25,7 @@ public class NotificationService {
         Notifications notification = new Notifications();
         notification.setContent(content);
         notification.setUser(author);
-        notification.setRead(false);//默认未读
+        notification.setReadFlag(false);//默认未读
         notification.setCreatetime(LocalDateTime.now());
 
         notificationRepository.save(notification);
@@ -43,7 +43,7 @@ public class NotificationService {
     //标记通知为已读
     public void markNotificationRead(Long notificationId){
         Notifications notifications = notificationRepository.findById(notificationId).orElseThrow(() -> new RuntimeException("通知不存在"));
-        notifications.setRead(true);
+        notifications.setReadFlag(true);
         notificationRepository.save(notifications);
     }
 

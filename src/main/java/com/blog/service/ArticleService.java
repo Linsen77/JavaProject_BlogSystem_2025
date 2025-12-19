@@ -31,8 +31,8 @@ public class ArticleService {
     //创建或更新文章
     public Article saveArticle(Article article){
         //设置创建时间和更新时间
-        article.setCreateDate((article.getCreateDate() == null? LocalDateTime.now():article.getCreateDate()));
-        article.setCreateDate(LocalDateTime.now());
+        article.setCreateTime((article.getCreateTime() == null? LocalDateTime.now():article.getCreateTime()));
+        article.setCreateTime(LocalDateTime.now());
         return articleRepository.save(article);
     }
 
@@ -89,7 +89,7 @@ public class ArticleService {
     //1.按标题搜索文章
     public List<Article>searchByTitle(String keyword){
         //使用JPA查询按标题关键词搜索文章
-        return articleRepository.findByTitleContainingAndVisibility(keyword,2);
+        return articleRepository.findByTitleContainingAndVisibility(keyword, Article.ArticleVisibility.PUBLIC);
     }
 
     //2.按标签搜索文章

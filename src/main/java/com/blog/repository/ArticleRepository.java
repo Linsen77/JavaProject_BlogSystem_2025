@@ -33,10 +33,10 @@ public interface ArticleRepository extends JpaRepository<Article,Long>{
     List<Article> findVisibleToFollowers(@Param("authorId") Long authorId);
 
     //1.按标题模糊搜索文章
-    List<Article> findByTitleContainingAndVisibility(String titl,int visibility);
+    List<Article> findByTitleContainingAndVisibility(String title,Article.ArticleVisibility visibility);
 
     //2.根据标签搜索文章
-    @Query("SELECT a form Article a JOIN a.tags t WHERE t.name = :tagName AND a.visibility = 2")
+    @Query("SELECT a from Article a JOIN a.tags t WHERE t.name = :tagName AND a.visibility = PUBLIC")
     List<Article> findByTag(String tagName);
 
     //3.获取热门文章（按阅读量排序）
@@ -47,7 +47,7 @@ public interface ArticleRepository extends JpaRepository<Article,Long>{
      * @param pageable 分页参数，控制获取的文章数量
      * @return 按阅读量排序的文章列表
      */
-    @Query("SELECT a FROM Article a WHERE a.visibility = 2 ORDER BY a.viewCount DESC")
+    @Query("SELECT a FROM Article a WHERE a.visibility = PUBLIC ORDER BY a.viewCount DESC")
     List<Article>findHotArticles(Pageable pageable);
 
     //4.根据标签推荐文章

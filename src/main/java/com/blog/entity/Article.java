@@ -26,7 +26,7 @@ public class Article {
     @Enumerated(EnumType.STRING)
     private ArticleVisibility visibility; //文章公开性：公开、仅粉丝、私人
 
-    private LocalDateTime createDate; // 创建时间
+    private LocalDateTime createTime; // 创建时间
     private LocalDateTime updateDate; // 更新时间
     //文章与标签的多对多关系
     @ManyToMany
