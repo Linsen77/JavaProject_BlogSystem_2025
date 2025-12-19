@@ -2,6 +2,7 @@ package com.blog.repository;
 
 import com.blog.entity.Article;
 import com.blog.entity.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +31,32 @@ public interface ArticleRepository extends JpaRepository<Article,Long>{
             "WHERE a.author.id = :authorId " +
             "AND (a.visibility = 'PUBLIC' OR a.visibility = 'FOLLOWERS')")
     List<Article> findVisibleToFollowers(@Param("authorId") Long authorId);
+
+    //1.按标题模糊搜索文章
+    List<Article> findByTitleContainingAndVisibility(String titl,int visibility);
+
+    //2.根据标签搜索文章
+    @Query("SELECT a form Article a JOIN a.tags t WHERE t.name = :tagName AND a.visibility = 2")
+    List<Article>findByTag(String tagName);
+
+    //3.获取热门文章（按阅读量排序）
+
+    /**
+     * 按照阅读量降序排序，获取热门文章
+     *
+     * @param pageable 分页参数，控制获取的文章数量
+     * @return 按阅读量排序的文章列表
+     */
+    @Query("SELECT a FROM Article a WHERE a.visibility = 2 ORDER BY a.viewCount DESC")
+    List<Article>findHotArticles(Pageable pageable);
+
+    //4.根据标签推荐文章
+    @Query("SELECT a FROM Article a JOIN a.tags t WHERE t.name IN :tags AND a.id NOT IN :viewedArticleIds ORDER BY a.viewCount DESC")
+    List<Article>recommendArticles(List<Object[]> tags, List<Long> viewedArticleIds, Pageable pageable);
+
+    //5.根据浏览历史统计标签（Top标签）
+    @Query("SELECT t.name,COUNT(t) FROM Article a JOIN a.tags t WHERE a.id IN :articleIds GROUP BY t.name ORDER BY COUNT(t) DESC")
+    List<Object[]>findTopTags(List<Long> articleIds);
+
+
 }

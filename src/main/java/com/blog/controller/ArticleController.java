@@ -16,6 +16,63 @@ public class ArticleController {
     @Autowired
     private ArticleService articleService;
 
+    /**
+     * 给文章添加标签
+     *
+     * @param articleId 文章ID
+     * @param tagIds 标签ID列表
+     * @return 更新后的文章
+     */
+    @PostMapping("{articleId}/tags")
+    public Article addTagsToArticle(@PathVariable Long articleId,@RequestBody List<Long>tagIds){
+        return articleService.addTagsToArticle(articleId,tagIds);
+    }
+
+    /**
+     * 获取文章的所有标签
+     *
+     * @param articleId 文章ID
+     * @return 文章的标签列表
+     */
+    @GetMapping("/{articleId}/tags")
+    public List<Tag>getTagOfArticle(@PathVariable Long articleId){
+        return articleService.getTagsOfArticle(articleId);
+    }
+    //1.按标题搜索文章
+    @GetMapping("/search/title")
+    public List<Article> searchByTitle(@RequestParam String keyword){
+        //调用服务层方法，按标题关键词搜索文章
+        return articleService.searchByTitle(keyword);
+    }
+
+    //2.按标签搜索文章
+    @GetMapping("/search/tag")// HTTP GET 请求
+    public List<Article> searchByTag(@RequestParam String tagName){
+        //调用服务层方法，按标签名称搜索文章
+        return articleService.searchByTag(tagName);
+    }
+
+    //3.获取热门文章（按阅读量）
+
+    /**
+     * 获取热门文章（按阅读量排序）
+     *
+     * @param limit 要获取的热门文章数量
+     * @return 按阅读量排序的热门文章列表
+     */
+    @GetMapping("/hot") //HTTP GET 请求
+    public List<Article>getHotArticle(@RequestParam(defaultValue = "10")int limit){
+        //调用服务层方法，获取前10篇热门文章
+        return articleService.getHotArticles(limit);
+    }
+
+    //4.推荐文章（根据用户浏览历史）
+    @GetMapping("/recommend") //HTTP GET 请求
+    public List<Article> recommendArticles(@RequestParam Long userId){
+        //调用服务层方法，推荐用户感兴趣的文章
+        return articleService.recommendArticles(userId);
+    }
+
     @Autowired
     private CommentService commentService;
 
