@@ -67,8 +67,15 @@ public class ArticleController {
     }
 
     //4.推荐文章（根据用户浏览历史）
+
+    /**
+     * 根据用户浏览历史推荐相似标签文章
+     *
+     * @param userId 用户ID
+     * @return 推荐的文章列表
+     */
     @GetMapping("/recommend") //HTTP GET 请求
-    public List<Article> recommendArticles(@RequestParam Long userId){
+    public List<Article> recommendArticles(@PathVariable Long userId){
         //调用服务层方法，推荐用户感兴趣的文章
         return articleService.recommendArticles(userId);
     }

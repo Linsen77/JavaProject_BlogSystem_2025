@@ -37,7 +37,7 @@ public interface ArticleRepository extends JpaRepository<Article,Long>{
 
     //2.根据标签搜索文章
     @Query("SELECT a form Article a JOIN a.tags t WHERE t.name = :tagName AND a.visibility = 2")
-    List<Article>findByTag(String tagName);
+    List<Article> findByTag(String tagName);
 
     //3.获取热门文章（按阅读量排序）
 
@@ -51,12 +51,13 @@ public interface ArticleRepository extends JpaRepository<Article,Long>{
     List<Article>findHotArticles(Pageable pageable);
 
     //4.根据标签推荐文章
-    @Query("SELECT a FROM Article a JOIN a.tags t WHERE t.name IN :tags AND a.id NOT IN :viewedArticleIds ORDER BY a.viewCount DESC")
-    List<Article>recommendArticles(List<Object[]> tags, List<Long> viewedArticleIds, Pageable pageable);
+    @Query("SELECT a FROM Article a JOIN a.tags t WHERE t.name IN :tags ORDER BY a.viewCount DESC")
+    List<Article>findArticlesByTags(List<String> tags);
 
     //5.根据浏览历史统计标签（Top标签）
     @Query("SELECT t.name,COUNT(t) FROM Article a JOIN a.tags t WHERE a.id IN :articleIds GROUP BY t.name ORDER BY COUNT(t) DESC")
     List<Object[]>findTopTags(List<Long> articleIds);
+
 
 
 }

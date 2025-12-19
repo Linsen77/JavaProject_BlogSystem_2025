@@ -3,7 +3,6 @@ package com.blog.service;
 import com.blog.entity.Article;
 import com.blog.entity.User;
 import com.blog.entity.Tag;
-import com.blog.entity.UserViewHistory;
 import com.blog.repository.ArticleRepository;
 import com.blog.repository.TagRepository;
 import com.blog.repository.UserViewHistoryRepository;
@@ -14,8 +13,10 @@ import org.springframework.stereotype.Service;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ArticleService {
@@ -127,6 +128,13 @@ public class ArticleService {
 
 
     //4.推荐文章（根据用户的浏览历史）
+
+    /**
+     * 基于用户浏览历史推荐文章
+     *
+     * @param userId 用户ID
+     * @return 推荐的文章列表
+     */
     public List<Article>recommendArticles(Long userId){
         //获取用户浏览过的文章ID列表
         List<Long> viewedArticleIds = userViewHistoryRepository.findViewedArticleIds(userId);
@@ -137,9 +145,33 @@ public class ArticleService {
         }
 
         //根据浏览过的文章统计标签信息
-        List<Object[]> topTags = articleRepository.findTopTags(viewedArticleIds);
+        List<String> topTags = getTopTagsFromArticle(viewedArticleIds);
 
         //返回推荐的文章
-        return articleRepository.recommendArticles(topTags,viewedArticleIds,PageRequest.of(0,10));
+        return articleRepository.findArticlesByTags(topTags);
+    }
+
+    /**
+     * 获取文章的标签并返回出现频率最高的标签
+     *
+     * @param articleIds 文章ID列表
+     * @return 标签列表
+     */
+    private List<String>getTopTagsFromArticle(List<Long>articleIds){
+        List<String>topTags = new ArrayList<>();
+
+        //获取文章的标签信息
+        for(Long articleId : articleIds){
+            List<Tag>tags = articleRepository.findById(articleId).get().getTags();
+            for(Tag tag : tags){
+                topTags.add(tag.getName());//将标签名称加入到列表
+            }
+        }
+
+        //获取出现频率最多的前3个标签
+        return topTags.stream()
+                .distinct()
+                .limit(3)
+                .collect(Collectors.toList());
     }
 }
