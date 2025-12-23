@@ -55,6 +55,8 @@ public class LikeService {
         return likeRepository.existsByUserIdAndArticleId(userId, articleId);
     }
 
-
+    public int countLikes(Long articleId) {
+        return likeRepository.countByArticleId(articleId);
+    }
 
 }

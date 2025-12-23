@@ -13,6 +13,9 @@ public interface LikeRepository extends JpaRepository<Likes, Long> {
     //统计用户发布的文章总点赞数
     long countByArticleAuthorId(Long authorId);
 
-
+    //用户是否给这篇文章点赞
     boolean existsByUserIdAndArticleId(Long userId, Long articleId);
+
+    //统计文章获赞数
+    int countByArticleId(Long articleId);
 }

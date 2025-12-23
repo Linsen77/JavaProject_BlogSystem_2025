@@ -83,9 +83,12 @@ public class ArticleController {
 
     //根据 ID 获取文章
     @GetMapping("/{id}")
-    public Optional<Article> getArticleById(@PathVariable Long id){
-        return articleService.getArticleById(id);
+    public ResponseEntity<Article> getArticleById(@PathVariable Long id){
+        Article article = articleService.getArticleById(id)
+                .orElseThrow(() -> new RuntimeException("文章不存在"));
+        return ResponseEntity.ok(article);
     }
+
 
     //根据作者获取文章
     @GetMapping("/byAuthor")
@@ -135,12 +138,19 @@ public class ArticleController {
         return ResponseEntity.ok(like);
     }
 
+    //获取是否点赞
     @GetMapping("/{id}/likes")
     public ResponseEntity<Boolean> getLikeStatus(@PathVariable Long id, @RequestParam Long userId) {
         boolean liked = likeService.hasUserLikedArticle(userId, id);
         return ResponseEntity.ok(liked);
     }
 
+    //获取点赞数
+    @GetMapping("/{id}/likes/count")
+    public ResponseEntity<Integer> getLikeCount(@PathVariable Long id) {
+        int count = likeService.countLikes(id);
+        return ResponseEntity.ok(count);
+    }
 
     //收藏功能
     @PostMapping("/{articleId}/bookmark")
