@@ -61,6 +61,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!--websocket-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
         <!-- 7. 测试依赖（单元测试用，比如验证数据库连接） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

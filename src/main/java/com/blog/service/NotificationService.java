@@ -31,7 +31,7 @@ public class NotificationService {
         notificationRepository.save(notification);
 
         //通过WebSocket推送
-        notificationWebSocket.sendNotification("新通知： " + content);
+        notificationWebSocket.sendNotification(author.getId().toString(), "新通知：" + content);
 
     }
 

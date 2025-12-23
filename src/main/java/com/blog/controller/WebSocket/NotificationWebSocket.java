@@ -6,41 +6,42 @@ import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
+import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@ServerEndpoint("/notifications")
+@ServerEndpoint("/notifications/{userId}")
 public class NotificationWebSocket {
 
-    private static Set<Session> clients = new HashSet<>();
+    private static Map<String, Set<Session>> userSessions = new ConcurrentHashMap<>();
 
     @OnOpen
-    public void onOpen(Session session) {
-        clients.add(session);//新连接建立时加入
+    public void onOpen(Session session, @PathParam("userId") String userId) {
+        userSessions.computeIfAbsent(userId, k -> new HashSet<>()).add(session);
+        System.out.println("用户 " + userId + " 已连接");
     }
 
     @OnClose
-    public void onClose(Session session) {
-        clients.remove(session);//连接关闭时移除
+    public void onClose(Session session, @PathParam("userId") String userId) {
+        userSessions.getOrDefault(userId, new HashSet<>()).remove(session);
+        System.out.println("用户 " + userId + " 已断开");
     }
 
-    @OnMessage
-    public void onMessage(String message, Session session) {
-        //处理收到的消息，可以向客户端返回数据
-    }
-
-    public void sendNotification(String message){
-        for(Session client : clients){
-            try{
-                client.getBasicRemote().sendText(message);//推送消息
+    public void sendNotification(String userId, String message){
+        for(Session client : userSessions.getOrDefault(userId, new HashSet<>())) {
+            try {
+                client.getBasicRemote().sendText(message);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 }
+

@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.support.SessionStatus;
 
+import java.time.LocalDateTime;
+
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     @Resource
@@ -69,6 +71,9 @@ public class AuthController {
             User user = new User();
             user.setEmail(email);
             user.setPassword(PasswordUtils.encryptPassword(dto.getPassword()));
+            user.setName(dto.getName());
+            user.setCreatedAt(LocalDateTime.now());
+            user.setUpdateAt(LocalDateTime.now());
 
             if(!userService.save(user)){
                 return Result.fail("注册失败，请重试");
@@ -99,10 +104,28 @@ public class AuthController {
             return Result.fail("密码错误(／_＼)");
         }
 
-        user.setPassword(null);
-        session.setAttribute("loginUser", user);
+        if (user.getName() == null || user.getName().isEmpty()) {
+            user.setName("用户" + user.getId());
+            userService.save(user);
+        }
 
-        return Result.success(user);
+        if (user.getCreatedAt() == null) {
+            user.setCreatedAt(LocalDateTime.now());
+        }
+        user.setUpdateAt(LocalDateTime.now());
+        userService.save(user);
+
+        User safeUser = new User();
+        safeUser.setId(user.getId());
+        safeUser.setName(user.getName());
+        safeUser.setEmail(user.getEmail());
+        safeUser.setAvatarUrl(user.getAvatarUrl());
+        safeUser.setBio(user.getBio());
+        safeUser.setCreatedAt(user.getCreatedAt());
+        safeUser.setUpdateAt(user.getUpdateAt());
+        session.setAttribute("loginUser", safeUser);
+
+        return Result.success(safeUser);
     }
 }
 
@@ -110,6 +133,7 @@ public class AuthController {
 //DTO类
 @Data
 class RegisterDTO {
+    private String name;
     private String email;
     private String password;
     private String code;

@@ -1,10 +1,12 @@
 package com.blog.service;
 
+import com.blog.dto.ArticleDTO;
 import com.blog.entity.Article;
 import com.blog.entity.User;
 import com.blog.entity.Tag;
 import com.blog.repository.ArticleRepository;
 import com.blog.repository.TagRepository;
+import com.blog.repository.UserRepository;
 import com.blog.repository.UserViewHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -27,12 +29,41 @@ public class ArticleService {
     private UserViewHistoryRepository userViewHistoryRepository;
     @Autowired
     private TagRepository tagRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     //创建或更新文章
-    public Article saveArticle(Article article){
-        //设置创建时间和更新时间
-        article.setCreateTime((article.getCreateTime() == null? LocalDateTime.now():article.getCreateTime()));
-        article.setCreateTime(LocalDateTime.now());
+//    public Article saveArticle(Article article){
+//        //设置创建时间和更新时间
+//        article.setCreateTime((article.getCreateTime() == null? LocalDateTime.now():article.getCreateTime()));
+//        article.setCreateTime(LocalDateTime.now());
+//        return articleRepository.save(article);
+//    }
+
+    public Article saveArticle(ArticleDTO dto){
+        Article article;
+        // 如果是更新文章
+        if (dto.getId() != null){
+            article = articleRepository.findById(dto.getId()) .orElseThrow(() -> new RuntimeException("Article not found"));
+        }
+        else{
+            article = new Article();
+            article.setCreateTime(LocalDateTime.now());
+        }
+        // 设置标题和内容
+        article.setTitle(dto.getTitle());
+        article.setContent(dto.getContent());
+        // 设置可见性（枚举）
+        article.setVisibility(Article.ArticleVisibility.valueOf(dto.getVisibility().toUpperCase()));
+        // 设置作者
+        User author = userRepository.findById(dto.getAuthorId()) .orElseThrow(() -> new RuntimeException("User not found")); article.setAuthor(author);
+        article.setAuthor(author);
+        // 设置标签
+        List<Tag> tags = tagRepository.findAllById(dto.getTags());
+        article.setTags(tags);
+        // 更新时间
+        article.setUpdateDate(LocalDateTime.now());
+
         return articleRepository.save(article);
     }
 

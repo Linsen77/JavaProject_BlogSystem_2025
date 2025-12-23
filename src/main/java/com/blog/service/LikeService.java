@@ -50,4 +50,18 @@ public class LikeService {
         return savedLike;
 
     }
+
+    //获取点赞状态
+    public boolean alreadyLiked(Long userId, Long articleId){
+        Article article = articleRepository.findById(articleId).orElseThrow(() -> new RuntimeException("文章不存在"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("用户不存在"));
+        //检查用户是否已经点赞过这篇文章
+        boolean alreadyLiked = likeRepository.existsByUserAndArticle(user,article);
+        if(alreadyLiked){
+            throw new RuntimeException("已经点赞过该文章");
+        }
+        return  likeRepository.existsByUserAndArticle(user,article);
+    }
+
+
 }

@@ -17,14 +17,14 @@ public class NotificationController {
     private NotificationService notificationService;
 
     //获取用户的所有通知
-    @GetMapping("/")
+    @GetMapping("/{userId}")
     public List<Notifications> getNotifications(@RequestParam Long userId) {
         return notificationService.getNotifications(userId);
     }
 
     //标记通知为已读
-    @PutMapping("/{notificationId}/read")
-    public void markAsRead(@PathVariable Long notificationId) {
-        notificationService.markNotificationRead(notificationId);
+    @PutMapping("/{id}/read")
+    public void markAsRead(@PathVariable Long id) {
+        notificationService.markNotificationRead(id);
     }
 }

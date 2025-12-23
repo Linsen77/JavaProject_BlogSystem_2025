@@ -3,7 +3,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/BlogSystem?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: lsx123456
+    password: 7777777
     driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.0 驱动类名（固定）
     hikari:
       connection-timeout: 30000
@@ -20,7 +20,7 @@ spring:
     # 邮件配置（QQ邮箱）
   mail:
     host: smtp.qq.com       # 固定值
-    port: 587               # 固定值
+    port: 465             # 固定值
     username: 3313251044@qq.com # 我的QQ邮箱地址
     password: sqycmffrbgygdaae # 我的QQ邮箱SMTP授权码（不是登录密码！）
     default-encoding: UTF-8
@@ -28,7 +28,7 @@ spring:
       mail:
         smtp:
           auth: true
-          starttls:
+          ssl:
             enable: true
         debug: true
 

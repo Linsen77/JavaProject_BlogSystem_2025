@@ -11,17 +11,20 @@ import com.blog.repository.UserRepository;
 import com.blog.service.ArticleService;
 import com.blog.service.FollowService;
 import com.blog.service.UserStatisticsService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 public class UserController {
     @Autowired
     private UserRepository userRepository;
@@ -39,7 +42,7 @@ public class UserController {
     private UserStatisticsService userStatisticsService;
 
     //访问某个用户主页
-    @GetMapping("/{userId}/profile")
+    @GetMapping("/{userId}")
     public UserProfileDTO getUserProfile(@PathVariable Long userId,  @RequestParam(required = false) Long viewerId){
 
         User user = userRepository.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
@@ -63,48 +66,69 @@ public class UserController {
 
     //获取当前登录用户信息
     @GetMapping("/me")
-    public User getCurrentUser(Principal principal){
-        return userRepository.findByEmail(principal.getName());
+    public ResponseEntity<?> getCurrentUser(HttpSession session){
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("未登录");
+        }
+        return ResponseEntity.ok(loginUser);
     }
 
     //获取用户的文章数，粉丝数和点赞数
-    @GetMapping("/{userId}/statistics")
+    @GetMapping("/{userId}/status")
     public ResponseEntity<UserStatisticsDto> getUserStatistics(@PathVariable Long userId) {
         UserStatisticsDto statistics = userStatisticsService.getUserStatistics(userId);
         return ResponseEntity.ok(statistics);
     }
 
-    //更新当前用户资料
-    @PutMapping("/update")
-    public ResponseEntity<?> updateProfile(@RequestBody UserUpdateDTO dto, Principal principal){
-        User user = userRepository.findByEmail(principal.getName());
-
-        user.setName(dto.getUsername());
-        user.setBio(dto.getBio());
-
-        userRepository.save(user);
-        return ResponseEntity.ok("更新完成ovo");
-
-    }
-
-    //上传头像
-    @PostMapping("/uploadAvatar")
-    public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file, Principal principal){
-        String fileName = UUID.randomUUID().toString() + ".png";
-        String path = "C:/Users/33132/Desktop/Java_2025/BlogSystem/avatar/" + fileName;
-
-        try{
-            file.transferTo(new File(path));
-        }
-        catch (Exception e){
-            return ResponseEntity.status(500).body("头像上传失败o(╥﹏╥)o");
+    // 更新当前用户资料
+    @PutMapping(value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateProfile(
+            @PathVariable Long userId,
+            @RequestPart("name") String name,
+            @RequestPart("bio") String bio,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar,
+            HttpSession session
+    ) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("未登录");
         }
 
-        User user = userRepository.findByEmail(principal.getName());
-        user.setAvatarUrl("/avatar"+fileName);
+        if (!loginUser.getId().equals(userId)) {
+            return ResponseEntity.status(403).body("不能修改其他用户资料");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+        user.setName(name);
+        user.setBio(bio);
+
+        // 如果上传了头像
+        if (avatar != null && !avatar.isEmpty()) {
+            String fileName = UUID.randomUUID().toString() + ".png";
+            String path = "C:/Users/33132/Desktop/Java_2025/BlogSystem/avatar/" + fileName;
+            try {
+                avatar.transferTo(new File(path));
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body("头像上传失败");
+            }
+            user.setAvatarUrl("http://localhost:8080/avatar/" + fileName);
+        }
+
+        user.setUpdateAt(LocalDateTime.now());
         userRepository.save(user);
 
-        return ResponseEntity.ok("头像上传成功！");
+        // 更新 session
+        session.setAttribute("loginUser", user);
+
+        System.out.println("avatar = " + avatar);
+
+
+        return ResponseEntity.ok(user);
     }
+
+
 
 }

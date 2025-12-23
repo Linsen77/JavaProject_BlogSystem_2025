@@ -20,7 +20,7 @@ public class Article {
     private int viewCount; //阅读量
 
     @ManyToOne
-    @JoinColumn(name = "author_id")  // author_id 外键
+    @JoinColumn(name = "author_id", referencedColumnName = "id")  // author_id 外键
     private User author;//作者
 
     @Enumerated(EnumType.STRING)

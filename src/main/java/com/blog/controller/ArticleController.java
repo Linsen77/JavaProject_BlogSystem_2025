@@ -1,5 +1,6 @@
 package com.blog.controller;
 
+import com.blog.dto.ArticleDTO;
 import com.blog.entity.*;
 import com.blog.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,70 +17,6 @@ public class ArticleController {
     @Autowired
     private ArticleService articleService;
 
-    /**
-     * 给文章添加标签
-     *
-     * @param articleId 文章ID
-     * @param tagIds 标签ID列表
-     * @return 更新后的文章
-     */
-    @PostMapping("{articleId}/tags")
-    public Article addTagsToArticle(@PathVariable Long articleId,@RequestBody List<Long>tagIds){
-        return articleService.addTagsToArticle(articleId,tagIds);
-    }
-
-    /**
-     * 获取文章的所有标签
-     *
-     * @param articleId 文章ID
-     * @return 文章的标签列表
-     */
-    @GetMapping("/{articleId}/tags")
-    public List<Tag>getTagOfArticle(@PathVariable Long articleId){
-        return articleService.getTagsOfArticle(articleId);
-    }
-    //1.按标题搜索文章
-    @GetMapping("/search/title")
-    public List<Article> searchByTitle(@RequestParam String keyword){
-        //调用服务层方法，按标题关键词搜索文章
-        return articleService.searchByTitle(keyword);
-    }
-
-    //2.按标签搜索文章
-    @GetMapping("/search/tag")// HTTP GET 请求
-    public List<Article> searchByTag(@RequestParam String tagName){
-        //调用服务层方法，按标签名称搜索文章
-        return articleService.searchByTag(tagName);
-    }
-
-    //3.获取热门文章（按阅读量）
-
-    /**
-     * 获取热门文章（按阅读量排序）
-     *
-     * @param limit 要获取的热门文章数量
-     * @return 按阅读量排序的热门文章列表
-     */
-    @GetMapping("/hot") //HTTP GET 请求
-    public List<Article>getHotArticle(@RequestParam(defaultValue = "10")int limit){
-        //调用服务层方法，获取前10篇热门文章
-        return articleService.getHotArticles(limit);
-    }
-
-    //4.推荐文章（根据用户浏览历史）
-
-    /**
-     * 根据用户浏览历史推荐相似标签文章
-     *
-     * @param userId 用户ID
-     * @return 推荐的文章列表
-     */
-    @GetMapping("/recommend") //HTTP GET 请求
-    public List<Article> recommendArticles(@PathVariable Long userId){
-        //调用服务层方法，推荐用户感兴趣的文章
-        return articleService.recommendArticles(userId);
-    }
-
     @Autowired
     private CommentService commentService;
 
@@ -92,10 +29,50 @@ public class ArticleController {
     @Autowired
     private BookmarkService bookmarkService;
 
+    //给文章添加标签
+    @PostMapping("/{id}/tags")
+    public Article addTagsToArticle(@PathVariable Long id,@RequestBody List<Long>tagIds){
+        return articleService.addTagsToArticle(id,tagIds);
+    }
+
+    //获取文章的标签
+    @GetMapping("/{id}/tags")
+    public List<Tag>getTagOfArticle(@PathVariable Long id){
+        return articleService.getTagsOfArticle(id);
+    }
+
+    //按标题搜索文章
+    @GetMapping("/search/byTitle")
+    public List<Article> searchByTitle(@RequestParam String keyword){
+        //调用服务层方法，按标题关键词搜索文章
+        return articleService.searchByTitle(keyword);
+    }
+
+    //按标签搜索文章
+    @GetMapping("/search/byTag")// HTTP GET 请求
+    public List<Article> searchByTag(@RequestParam String tagName){
+        //调用服务层方法，按标签名称搜索文章
+        return articleService.searchByTag(tagName);
+    }
+
+    //获取热门文章（按阅读量）
+    @GetMapping("/hot") //HTTP GET 请求
+    public List<Article>getHotArticle(@RequestParam(defaultValue = "10")int limit){
+        //调用服务层方法，获取前10篇热门文章
+        return articleService.getHotArticles(limit);
+    }
+
+    //推荐文章（根据用户浏览历史）
+    @GetMapping("recommend/{userId}") //HTTP GET 请求
+    public List<Article> recommendArticles(@PathVariable Long userId){
+        //调用服务层方法，推荐用户感兴趣的文章
+        return articleService.recommendArticles(userId);
+    }
+
     //创建或更新文章
     @PostMapping
-    public Article createOrUpdateArticle(@RequestBody Article article){
-        return articleService.saveArticle(article);
+    public Article createOrUpdateArticle(@RequestBody ArticleDTO dto){
+        return articleService.saveArticle(dto);
     }
 
     //获取所有文章
@@ -111,7 +88,7 @@ public class ArticleController {
     }
 
     //根据作者获取文章
-    @GetMapping("/author/{author}")
+    @GetMapping("/byAuthor")
     public List<Article> getArticleByAuthor(@PathVariable User author)
     {
         return articleService.getArticleByAuthor(author);
@@ -123,9 +100,8 @@ public class ArticleController {
         articleService.deleteArticle(id);
     }
 
-
     //评论功能
-    @PostMapping("/{articleId}/comments")
+    @PostMapping("{id}/comments")
     public ResponseEntity<Comment> addComment(@PathVariable Long articleId, @RequestParam Long userId, @RequestParam String content){
 
         //调佣CommentService添加评论
@@ -139,7 +115,7 @@ public class ArticleController {
     }
 
     //点赞功能
-    @PostMapping("/{articleId}/likes")
+    @PostMapping("{id}/like")
     public ResponseEntity<Likes> addLike(@PathVariable Long articleId, @RequestParam Long userId){
 
         //调用LikeService来添加点赞
@@ -151,6 +127,13 @@ public class ArticleController {
 
         return ResponseEntity.ok(like);
     }
+
+    @GetMapping("/{id}/likes")
+    public ResponseEntity<Boolean> getLikeStatus(@PathVariable Long id, @RequestParam Long userId) {
+        boolean liked = likeService.alreadyLiked(userId, id);
+        return ResponseEntity.ok(liked);
+    }
+
 
     //收藏功能
     @PostMapping("/{articleId}/bookmark")
@@ -168,7 +151,7 @@ public class ArticleController {
     }
 
     //获取用户收藏的文章
-    @GetMapping("/bookmarks")
+    @GetMapping("/{id}/bookmarks")
     public ResponseEntity<List<Article>> getAllBookmarks(@RequestParam Long userId){
 
         //调用BoookmarkService来获取收藏的文章

@@ -16,7 +16,7 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/follow")
+@RequestMapping("/api")
 public class FollowController {
 
     @Autowired
@@ -31,28 +31,29 @@ public class FollowController {
     private ArticleRepository articleRepository;
 
     //关注某个用户
-    @PostMapping("/{userId}")
-    public ResponseEntity<?> follow(@PathVariable Long userId, Principal principal) {
+    @PostMapping("/follow/{targetUserId}")
+    public ResponseEntity<?> follow(@PathVariable Long targetUserId, Principal principal) {
         User me = userRepository.findByEmail(principal.getName());
 
-        if(me.getId().equals(userId)){
+        if(me.getId().equals(targetUserId)){
             return ResponseEntity.badRequest().body("不能关注自己！！！！");
         }
 
-        boolean ok = followService.follow(me.getId(), userId);
+        boolean ok = followService.follow(me.getId(), targetUserId);
         return ResponseEntity.ok(ok ? "关注成功" : "已关注该用户");
     }
 
     //取消关注
-    public ResponseEntity<?> unfollow(@PathVariable Long userId, Principal principal) {
+    @DeleteMapping("/follow/{targetUserId}")
+    public ResponseEntity<?> unfollow(@PathVariable Long targetUserId, Principal principal) {
         User me = userRepository.findByEmail(principal.getName());
 
-        boolean ok = followService.unfollow(me.getId(), userId);
+        boolean ok = followService.unfollow(me.getId(), targetUserId);
         return ResponseEntity.ok(ok ? "取关成功" : "未关注该用户");
     }
 
     //查看我的关注列表
-    @GetMapping("/list")
+    @GetMapping("/follow/list/{userId}")
     public List<User> getMyFollowList(Principal principal) {
         User me = userRepository.findByEmail(principal.getName());
 
@@ -61,7 +62,7 @@ public class FollowController {
         return list.stream().map(f -> userRepository.findById(f.getFollowerId()).get()).toList();
     }
 
-    @GetMapping("/feed")
+    @GetMapping("/follow/articles/{userId}")
     public List<Article> getFollowFeed(Principal principal) {
         User me = userRepository.findByEmail(principal.getName());
 
