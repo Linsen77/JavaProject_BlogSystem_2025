@@ -114,6 +114,13 @@ public class ArticleController {
         return ResponseEntity.ok(comment);
     }
 
+    //获取评论列表
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<Comment>> getComments(@PathVariable Long id) {
+        List<Comment> comments = commentService.getCommentsByArticleId(id);
+        return ResponseEntity.ok(comments);
+    }
+
     //点赞功能
     @PostMapping("{id}/like")
     public ResponseEntity<Likes> addLike(@PathVariable Long articleId, @RequestParam Long userId){
@@ -130,7 +137,7 @@ public class ArticleController {
 
     @GetMapping("/{id}/likes")
     public ResponseEntity<Boolean> getLikeStatus(@PathVariable Long id, @RequestParam Long userId) {
-        boolean liked = likeService.alreadyLiked(userId, id);
+        boolean liked = likeService.hasUserLikedArticle(userId, id);
         return ResponseEntity.ok(liked);
     }
 

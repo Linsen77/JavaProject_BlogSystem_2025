@@ -14,4 +14,5 @@ public interface LikeRepository extends JpaRepository<Likes, Long> {
     long countByArticleAuthorId(Long authorId);
 
 
+    boolean existsByUserIdAndArticleId(Long userId, Long articleId);
 }

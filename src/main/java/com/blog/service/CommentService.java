@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class CommentService {
@@ -45,5 +46,9 @@ public class CommentService {
         notificationService.sendNotificationToAuthor(article.getAuthor(), "收到一条评论~");
 
         return savedComment;
+    }
+
+    public List<Comment> getCommentsByArticleId(Long id) {
+        return commentRepository.findByArticleId(id);
     }
 }
