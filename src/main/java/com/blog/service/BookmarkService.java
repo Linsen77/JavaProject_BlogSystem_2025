@@ -7,6 +7,7 @@ import com.blog.entity.User;
 import com.blog.repository.ArticleRepository;
 import com.blog.repository.BookmarkRepository;
 import com.blog.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -57,6 +58,29 @@ public class BookmarkService {
 
     //查看用户收藏的文章
     public List<Article> getBookmarks(Long userId){
-        return bookmarkRepository.findByUserId(userId);
+        List<Bookmark> bookmarks = bookmarkRepository.findByUserId(userId);
+        return bookmarks.stream()
+                .map(Bookmark::getArticle)
+                .toList();
     }
+
+
+    //判断是否收藏
+    public boolean isBookmarked(Long userId, Long articleId) {
+        return bookmarkRepository.existsByUserIdAndArticleId(userId, articleId);
+    }
+
+    //取消收藏
+    @Transactional
+    public void removeBookmark(Long articleId, Long userId) {
+        bookmarkRepository.deleteByUserIdAndArticleId(userId, articleId);
+    }
+
+
+    //获取收藏数
+    public int countBookmarks(Long userId) {
+        return bookmarkRepository.countByUserId(userId);
+    }
+
+
 }

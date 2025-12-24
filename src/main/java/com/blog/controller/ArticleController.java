@@ -1,14 +1,17 @@
 package com.blog.controller;
 
 import com.blog.dto.ArticleDTO;
+import com.blog.dto.CommentDTO;
 import com.blog.entity.*;
+import com.blog.repository.UserViewHistoryRepository;
 import com.blog.service.*;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -21,13 +24,16 @@ public class ArticleController {
     private CommentService commentService;
 
     @Autowired
-    private NotificationService notificationService;
-
-    @Autowired
     private LikeService likeService;
 
     @Autowired
     private BookmarkService bookmarkService;
+
+    @Autowired
+    private FollowService followService;
+
+    @Autowired
+    private UserViewHistoryRepository userViewHistoryRepository;
 
     //给文章添加标签
     @PostMapping("/{id}/tags")
@@ -84,25 +90,131 @@ public class ArticleController {
 
     //获取所有文章
     @GetMapping
-    public List<Article> getAllArticles(){
-        return articleService.getAllArticles();
+    public ResponseEntity<?> getAllArticles(HttpSession session) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        Long viewerId = (loginUser != null) ? loginUser.getId() : null;
+        List<Article> all = articleService.getAllArticles();
+        List<Article> visibleArticles = all.stream()
+                .filter(article -> {
+                    Long authorId = article.getAuthor().getId();
+                    Article.ArticleVisibility visibility = article.getVisibility();
+                    // 公开文章：所有人可见
+                    if (visibility == Article.ArticleVisibility.PUBLIC) {
+                        return true;
+                    }
+                    // 未登录用户不能看非公开文章
+                    if (viewerId == null) {
+                        return false;
+                    }
+                    // 作者本人永远可见
+                    if (viewerId.equals(authorId)) {
+                        return true;
+                    }
+                    // 粉丝可见
+                    if (visibility == Article.ArticleVisibility.FOLLOWERS) {
+                        return followService.isFollowing(viewerId, authorId);
+                    }
+                    // 私密文章（仅作者本人可见）
+                    return false;
+                })
+                .toList();
+        return ResponseEntity.ok(visibleArticles);
     }
+
 
     //根据 ID 获取文章
     @GetMapping("/{id}")
-    public ResponseEntity<Article> getArticleById(@PathVariable Long id){
+    public ResponseEntity<?> getArticleById(
+            @PathVariable Long id,
+            HttpSession session
+    ) {
         Article article = articleService.getArticleById(id)
                 .orElseThrow(() -> new RuntimeException("文章不存在"));
-        return ResponseEntity.ok(article);
+
+        articleService.incrementViewCount(id);
+
+        User loginUser = (User) session.getAttribute("loginUser");
+        Long authorId = article.getAuthor().getId();
+        Article.ArticleVisibility visibility = article.getVisibility();
+
+        //写入浏览记录
+        if (loginUser != null) {
+            userViewHistoryRepository.save(
+                    new UserViewHistory(loginUser.getId(), id, LocalDateTime.now())
+            );
+        }
+
+        // 公开文章：任何人都能看
+        if (visibility == Article.ArticleVisibility.PUBLIC) {
+            return ResponseEntity.ok(article);
+        }
+
+        // 未登录用户不能看非公开文章
+        if (loginUser == null) {
+            return ResponseEntity.status(403).body("无权限查看");
+        }
+
+        // 作者本人永远可以看
+        if (loginUser.getId().equals(authorId)) {
+            return ResponseEntity.ok(article);
+        }
+
+        // 粉丝可见
+        if (visibility == Article.ArticleVisibility.FOLLOWERS) {
+            boolean isFan = followService.isFollowing(loginUser.getId(), authorId);
+            if (isFan) {
+                return ResponseEntity.ok(article);
+            } else {
+                return ResponseEntity.status(403).body("仅粉丝可见");
+            }
+        }
+
+        // 私密文章（仅自己可见）
+        if (visibility == Article.ArticleVisibility.PRIVATE) {
+            return ResponseEntity.status(403).body("仅作者本人可见");
+        }
+
+        return ResponseEntity.status(403).body("无权限查看");
     }
+
 
 
     //根据作者获取文章
-    @GetMapping("/byAuthor")
-    public List<Article> getArticleByAuthor(@PathVariable User author)
-    {
-        return articleService.getArticleByAuthor(author);
+    @GetMapping("/byAuthor/{authorId}")
+    public ResponseEntity<?> getArticleByAuthor(
+            @PathVariable Long authorId,
+            HttpSession session
+    ) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        Long viewerId = (loginUser != null) ? loginUser.getId() : null;
+        List<Article> all = articleService.getArticleByAuthorId(authorId);
+        List<Article> visibleArticles = all.stream()
+                .filter(article -> {
+                    Article.ArticleVisibility visibility = article.getVisibility();
+                    Long articleAuthorId = article.getAuthor().getId();
+                    // 公开文章
+                    if (visibility == Article.ArticleVisibility.PUBLIC) {
+                        return true;
+                    }
+                    // 未登录用户不能看非公开文章
+                    if (viewerId == null) {
+                        return false;
+                    }
+                    // 作者本人永远可见
+                    if (viewerId.equals(articleAuthorId)) {
+                        return true;
+                    }
+                    // 粉丝可见
+                    if (visibility == Article.ArticleVisibility.FOLLOWERS) {
+                        return followService.isFollowing(viewerId, articleAuthorId);
+                    }
+                    // 私密文章（仅作者本人）
+                    return false;
+                })
+                .toList();
+        return ResponseEntity.ok(visibleArticles);
     }
+
 
     //根据作者名搜索文章
     @GetMapping("/search/byAuthor")
@@ -118,18 +230,47 @@ public class ArticleController {
     }
 
     //评论功能
-    @PostMapping("{id}/comments")
-    public ResponseEntity<Comment> addComment(@PathVariable Long articleId, @RequestParam Long userId, @RequestParam String content){
+    @PostMapping("/{articleId}/comments")
+    public ResponseEntity<?> addComment(
+            @PathVariable Long articleId,
+            @RequestBody CommentDTO dto,
+            HttpSession session
+    ) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(403).body("请先登录");
+        }
 
-        //调佣CommentService添加评论
+        Long userId = loginUser.getId();
+        String content = dto.getContent();
+
         Comment comment = commentService.addComment(articleId, userId, content);
 
-        //调用notificationService推送通知
         Article article = comment.getArticle();
-        notificationService.sendNotificationToAuthor(article.getAuthor(), "你的文章收到了新评论！");
 
         return ResponseEntity.ok(comment);
     }
+
+    @DeleteMapping("/{articleId}/comments/{commentId}")
+    public ResponseEntity<?> deleteComment(
+            @PathVariable Long articleId,
+            @PathVariable Long commentId,
+            HttpSession session
+    ) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(403).body("请先登录");
+        }
+
+        // 只有评论作者或文章作者可以删除评论
+        if (!commentService.canDeleteComment(commentId, loginUser.getId())) {
+            return ResponseEntity.status(403).body("无权限删除该评论");
+        }
+
+        commentService.deleteComment(commentId);
+        return ResponseEntity.ok("删除成功");
+    }
+
 
     //获取评论列表
     @GetMapping("/{id}/comments")
@@ -139,17 +280,37 @@ public class ArticleController {
     }
 
     //点赞功能
-    @PostMapping("{id}/like")
-    public ResponseEntity<Likes> addLike(@PathVariable Long articleId, @RequestParam Long userId){
+    @PostMapping("/{articleId}/like")
+    public ResponseEntity<Likes> addLike(@PathVariable Long articleId, HttpSession session) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(403).body(null);
+        }
 
-        //调用LikeService来添加点赞
+        Long userId = loginUser.getId();
+
         Likes like = likeService.addLike(articleId, userId);
 
-        //调用notificationService来推送通知
         Article article = like.getArticle();
-        notificationService.sendNotificationToAuthor(article.getAuthor(), "你收获了一条点赞~");
 
         return ResponseEntity.ok(like);
+    }
+
+    @DeleteMapping("/{articleId}/like")
+    public ResponseEntity<?> removeLike(
+            @PathVariable Long articleId,
+            HttpSession session
+    ) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(403).body("请先登录");
+        }
+
+        Long userId = loginUser.getId();
+
+        likeService.removeLike(articleId, userId);
+
+        return ResponseEntity.ok("取消点赞成功");
     }
 
     //获取是否点赞
@@ -168,26 +329,56 @@ public class ArticleController {
 
     //收藏功能
     @PostMapping("/{articleId}/bookmark")
-    public ResponseEntity<Bookmark> addBookmark(@PathVariable Long articleId, @RequestParam Long userId){
+    public ResponseEntity<?> addBookmark(
+            @PathVariable Long articleId,
+            HttpSession session
+    ) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(403).body("请先登录");
+        }
 
-        //调用BookmarkService来添加收藏
+        Long userId = loginUser.getId();
+
         Bookmark bookmark = bookmarkService.addBookmark(articleId, userId);
 
-        //调用notificationService来推送通知
         Article article = bookmark.getArticle();
-        notificationService.sendNotificationToAuthor(article.getAuthor(), "你的文章被收藏啦(*^▽^*)");
 
         return ResponseEntity.ok(bookmark);
-
     }
 
-    //获取用户收藏的文章
-    @GetMapping("/{id}/bookmarks")
-    public ResponseEntity<List<Article>> getAllBookmarks(@RequestParam Long userId){
+    @DeleteMapping("/{articleId}/bookmark")
+    public ResponseEntity<?> removeBookmark(
+            @PathVariable Long articleId,
+            HttpSession session
+    ) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.status(403).body("请先登录");
+        }
 
-        //调用BoookmarkService来获取收藏的文章
-        List<Article> bookmarkArticles = bookmarkService.getBookmarks(userId);
+        Long userId = loginUser.getId();
 
-        return ResponseEntity.ok(bookmarkArticles);
+        bookmarkService.removeBookmark(articleId, userId);
+
+        return ResponseEntity.ok("取消收藏成功");
     }
+
+    //查询某用户是否收藏了某文章
+    @GetMapping("/{articleId}/bookmark/status")
+    public ResponseEntity<?> getBookmarkStatus(
+            @PathVariable Long articleId,
+            HttpSession session
+    ) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return ResponseEntity.ok(false);
+        }
+        Long userId = loginUser.getId();
+        boolean bookmarked = bookmarkService.isBookmarked(userId, articleId);
+
+        return ResponseEntity.ok(bookmarked);
+    }
+
+
 }

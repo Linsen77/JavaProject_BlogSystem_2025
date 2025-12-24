@@ -19,7 +19,7 @@ public class UploadController {
     @PostMapping("/upload")
     public Map<String, String> upload(@RequestParam("file") MultipartFile file) throws IOException {
 
-        // ⭐ 使用项目根目录作为上传路径
+        //使用项目根目录作为上传路径
         String folder = System.getProperty("user.dir") + "/uploads/";
         File dir = new File(folder);
         if (!dir.exists()) dir.mkdirs();
@@ -28,7 +28,7 @@ public class UploadController {
         File dest = new File(dir, fileName);
         file.transferTo(dest);
 
-        // ⭐ 返回可访问的 URL
+        //返回可访问的 URL
         String url = "http://localhost:8080/uploads/" + fileName;
 
         Map<String, String> result = new HashMap<>();

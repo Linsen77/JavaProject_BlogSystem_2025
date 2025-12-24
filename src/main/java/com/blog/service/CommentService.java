@@ -3,7 +3,6 @@ package com.blog.service;
 
 import com.blog.entity.Article;
 import com.blog.entity.Comment;
-import com.blog.entity.Notifications;
 import com.blog.entity.User;
 import com.blog.repository.ArticleRepository;
 import com.blog.repository.CommentRepository;
@@ -46,6 +45,19 @@ public class CommentService {
         notificationService.sendNotificationToAuthor(article.getAuthor(), "收到一条评论~");
 
         return savedComment;
+    }
+
+    public boolean canDeleteComment(Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("评论不存在"));
+
+        // 评论作者 或 文章作者
+        return comment.getUser().getId().equals(userId)
+                || comment.getArticle().getAuthor().getId().equals(userId);
+    }
+
+    public void deleteComment(Long commentId) {
+        commentRepository.deleteById(commentId);
     }
 
     public List<Comment> getCommentsByArticleId(Long id) {

@@ -18,7 +18,7 @@ public class NotificationController {
 
     //获取用户的所有通知
     @GetMapping("/{userId}")
-    public List<Notifications> getNotifications(@RequestParam Long userId) {
+    public List<Notifications> getNotifications(@PathVariable Long userId) {
         return notificationService.getNotifications(userId);
     }
 

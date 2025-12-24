@@ -31,6 +31,12 @@ public class FollowController {
     @Autowired
     private ArticleRepository articleRepository;
 
+    //是否关注过
+    @GetMapping("/follow/isFollowing")
+    public boolean isFollowing(@RequestParam Long viewerId, @RequestParam Long authorId) {
+        return followService.isFollowing(viewerId, authorId);
+    }
+
     //关注某个用户
     @PostMapping("/follow/{targetUserId}")
     public ResponseEntity<?> follow(@PathVariable Long targetUserId, HttpSession session) {

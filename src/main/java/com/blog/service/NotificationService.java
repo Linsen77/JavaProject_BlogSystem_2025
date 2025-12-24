@@ -7,7 +7,7 @@ import com.blog.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.management.Notification;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,7 +31,10 @@ public class NotificationService {
         notificationRepository.save(notification);
 
         //通过WebSocket推送
-        notificationWebSocket.sendNotification(author.getId().toString(), "新通知：" + content);
+        notificationWebSocket.sendNotification(
+                author.getId().toString(),
+                notification
+        );
 
     }
 

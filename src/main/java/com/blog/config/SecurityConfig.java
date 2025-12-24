@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -30,8 +29,14 @@ public class SecurityConfig {
                         // 文章接口（全部放行）
                         .requestMatchers("/api/articles/**").permitAll()
 
+                        .requestMatchers(HttpMethod.DELETE, "/api/articles/*/bookmark").permitAll()
+
                         // 关注接口
+                        .requestMatchers(HttpMethod.DELETE, "/api/follow/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/follow/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/follow/**").permitAll()
                         .requestMatchers("/api/follow/**").permitAll()
+
 
                         // 上传接口
                         .requestMatchers("/api/upload").permitAll()
@@ -42,6 +47,8 @@ public class SecurityConfig {
 
                         // WebSocket
                         .requestMatchers("/ws/**", "/notifications/**").permitAll()
+
+                        .requestMatchers("/api/notifications/**").permitAll()
 
                         // 其他全部需要登录
                         .anyRequest().authenticated()

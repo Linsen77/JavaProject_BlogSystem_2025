@@ -77,8 +77,8 @@ public class Article {
         this.viewCount = viewCount;
     }
 
-    public int getVisibility() {
-        return visibility.ordinal();
+    public ArticleVisibility getVisibility() {
+        return visibility;
     }
 
     public void setVisibility(ArticleVisibility visibility) {

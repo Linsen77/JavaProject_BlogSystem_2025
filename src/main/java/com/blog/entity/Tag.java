@@ -1,5 +1,6 @@
 package com.blog.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -13,6 +14,7 @@ public class Tag {
     private String name;//标签名称
 
     //反向多对多关系，标签与文章关联
+    @JsonIgnore
     @ManyToMany(mappedBy = "tags")
     private List<Article> articles;//与文章的多对关系
 
@@ -32,11 +34,4 @@ public class Tag {
         this.name = name;
     }
 
-    public List<Article> getArticles() {
-        return articles;
-    }
-
-    public void setArticles(List<Article> articles) {
-        this.articles = articles;
-    }
 }

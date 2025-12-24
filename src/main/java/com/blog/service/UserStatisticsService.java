@@ -19,6 +19,9 @@ public class UserStatisticsService {
     @Autowired
     private LikeRepository likeRepository;
 
+    @Autowired
+    private BookmarkService bookmarkService;
+
     // 获取用户统计信息
     public UserStatisticsDto getUserStatistics(Long userId) {
 
@@ -34,6 +37,9 @@ public class UserStatisticsService {
         //获取用户文章的总点赞数
         long likeCount = likeRepository.countByArticleAuthorId(userId);
 
-        return new UserStatisticsDto(articleCount, followerCount, followeeCount, likeCount);
+        //获取用户收藏文章数量
+        int bookmarkCount = bookmarkService.countBookmarks(userId);
+
+        return new UserStatisticsDto(articleCount, followerCount, followeeCount, likeCount, bookmarkCount);
     }
 }

@@ -1,16 +1,15 @@
 package com.blog.controller.WebSocket;
 
 
-import com.blog.entity.Notifications;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.websocket.OnClose;
-import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +25,7 @@ public class NotificationWebSocket {
     public void onOpen(Session session, @PathParam("userId") String userId) {
         userSessions.computeIfAbsent(userId, k -> new HashSet<>()).add(session);
         System.out.println("用户 " + userId + " 已连接");
+        System.out.println("WebSocket 连接成功: " + userId);
     }
 
     @OnClose
@@ -34,14 +34,18 @@ public class NotificationWebSocket {
         System.out.println("用户 " + userId + " 已断开");
     }
 
-    public void sendNotification(String userId, String message){
-        for(Session client : userSessions.getOrDefault(userId, new HashSet<>())) {
-            try {
-                client.getBasicRemote().sendText(message);
-            } catch (IOException e) {
-                e.printStackTrace();
+    public void sendNotification(String userId, Object notification){
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(notification);
+
+            for (Session client : userSessions.getOrDefault(userId, new HashSet<>())) {
+                client.getBasicRemote().sendText(json);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
+
 }
 

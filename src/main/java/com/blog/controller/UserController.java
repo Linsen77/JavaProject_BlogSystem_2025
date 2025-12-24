@@ -2,13 +2,13 @@ package com.blog.controller;
 
 import com.blog.dto.UserProfileDTO;
 import com.blog.dto.UserStatisticsDto;
-import com.blog.dto.UserUpdateDTO;
 import com.blog.entity.Article;
 import java.io.File;
 import com.blog.entity.User;
 import com.blog.repository.ArticleRepository;
 import com.blog.repository.UserRepository;
 import com.blog.service.ArticleService;
+import com.blog.service.BookmarkService;
 import com.blog.service.FollowService;
 import com.blog.service.UserStatisticsService;
 import jakarta.servlet.http.HttpSession;
@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.security.Principal;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -40,6 +40,9 @@ public class UserController {
 
     @Autowired
     private UserStatisticsService userStatisticsService;
+
+    @Autowired
+    private BookmarkService bookmarkService;
 
     //访问某个用户主页
     @GetMapping("/{userId}")
@@ -128,5 +131,13 @@ public class UserController {
 
         return ResponseEntity.ok(user);
     }
+
+    //查看用户收藏的文章
+    @GetMapping("/bookmarks/{userId}")
+    public ResponseEntity<List<Article>> getUserBookmarks(@PathVariable("userId") Long userId) {
+        List<Article> bookmarkArticles = bookmarkService.getBookmarks(userId);
+        return ResponseEntity.ok(bookmarkArticles);
+    }
+
 
 }

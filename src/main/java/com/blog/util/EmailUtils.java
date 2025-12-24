@@ -23,7 +23,7 @@ public class EmailUtils {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail); // 发件人
         message.setTo(toEmail);     // 收件人
-        message.setSubject("blogsystem注册验证码"); // 邮件标题
+        message.setSubject("Saki_orz Blog注册验证码"); // 邮件标题
         // 邮件内容
         message.setText("验证码：" + code + "\n该验证码5分钟内有效");
 

@@ -3,10 +3,12 @@ package com.blog.service;
 
 import com.blog.entity.Follows;
 import com.blog.repository.FollowRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class FollowService {
     @Autowired
     private FollowRepository followRepository;

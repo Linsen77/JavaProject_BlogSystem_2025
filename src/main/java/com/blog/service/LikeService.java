@@ -51,6 +51,14 @@ public class LikeService {
 
     }
 
+    public void removeLike(Long articleId, Long userId) {
+        Likes like = likeRepository.findByArticleIdAndUserId(articleId, userId);
+        if (like != null) {
+            likeRepository.delete(like);
+        }
+    }
+
+
     public boolean hasUserLikedArticle(Long userId, Long articleId) {
         return likeRepository.existsByUserIdAndArticleId(userId, articleId);
     }
