@@ -3,6 +3,8 @@ package com.blog.repository;
 import com.blog.entity.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 /**
  * 标签repository
  * 该接口用于与数据库交互，操作与标签相关的数据。
@@ -17,5 +19,5 @@ public interface TagRepository extends JpaRepository<Tag,Long> {
      * @param name 标签名称
      * @return 返回与名称匹配的标签对象
      */
-    Tag findByName(String name);//根据标签名称查找标签
+    Optional<Tag> findByName(String name);//根据标签名称查找标签
 }

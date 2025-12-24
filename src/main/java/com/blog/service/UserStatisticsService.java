@@ -26,10 +26,10 @@ public class UserStatisticsService {
         long articleCount = articleRepository.countByAuthorId(userId);
 
         //获取用户的粉丝数
-        long followerCount = followRepository.countByFollowerId(userId);
+        long followerCount = followRepository.countByFolloweeId(userId);
 
         //获取用户的关注数
-        long  followeeCount = followRepository.countByFolloweeId(userId);
+        long  followeeCount = followRepository.countByFollowerId(userId);
 
         //获取用户文章的总点赞数
         long likeCount = likeRepository.countByArticleAuthorId(userId);

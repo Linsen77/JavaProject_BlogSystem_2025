@@ -17,6 +17,7 @@ public class Article {
 
     private String title; //文章标题
     private String content; //文章内容，使用markdown 格式
+    private String cover;//封面URL
     private int viewCount; //阅读量
 
     @ManyToOne

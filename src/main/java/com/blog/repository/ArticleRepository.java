@@ -58,6 +58,6 @@ public interface ArticleRepository extends JpaRepository<Article,Long>{
     @Query("SELECT t.name,COUNT(t) FROM Article a JOIN a.tags t WHERE a.id IN :articleIds GROUP BY t.name ORDER BY COUNT(t) DESC")
     List<Object[]>findTopTags(List<Long> articleIds);
 
-
-
+    //根据作者名搜索文章
+    List<Article> findByAuthor_NameContainingIgnoreCase(String authorName);
 }

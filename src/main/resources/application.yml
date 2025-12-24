@@ -54,3 +54,15 @@ spring:
     level:
       com.blog.mapper: debug  # 打印SQL语句
       org.springframework.jdbc: debug
+
+
+  web:
+    resources:
+      static-locations:
+        - classpath:/static/
+        - file:./uploads/
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 20MB

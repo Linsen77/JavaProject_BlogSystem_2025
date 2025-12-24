@@ -2,6 +2,7 @@ package com.blog.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -18,34 +19,33 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
-                        // 允许所有认证相关接口
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // 认证接口
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // 允许文章接口
-                        .requestMatchers("/api/articles/**").permitAll()
-
-                        .requestMatchers("/api/articles/*/likes").permitAll()
-
-                        .requestMatchers("/api/articles/*/like").permitAll()
-
-                        .requestMatchers("/api/articles/*/comments").permitAll()
-
-                        .requestMatchers("/api/articles/*/bookmarks").permitAll()
-
-                        // 允许 WebSocket
-                        .requestMatchers("/ws/**","/notifications/**").permitAll()
-
-                        // 允许静态资源
-                        .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/images/**").permitAll()
-
+                        // 用户接口
                         .requestMatchers("/api/users/**").permitAll()
 
-                        .requestMatchers("/avatar/**").permitAll()
+                        // 文章接口（全部放行）
+                        .requestMatchers("/api/articles/**").permitAll()
 
-                        // 其他接口需要登录
+                        // 关注接口
+                        .requestMatchers("/api/follow/**").permitAll()
+
+                        // 上传接口
+                        .requestMatchers("/api/upload").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+
+                        // 静态资源
+                        .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/images/**", "/avatar/**").permitAll()
+
+                        // WebSocket
+                        .requestMatchers("/ws/**", "/notifications/**").permitAll()
+
+                        // 其他全部需要登录
                         .anyRequest().authenticated()
                 )
-                // 禁用 HTTP Basic（否则会干扰前端）
                 .httpBasic(httpBasic -> httpBasic.disable());
 
         return http.build();

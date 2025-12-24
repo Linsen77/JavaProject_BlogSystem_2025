@@ -69,9 +69,16 @@ public class ArticleController {
         return articleService.recommendArticles(userId);
     }
 
-    //创建或更新文章
+    //创建文章
     @PostMapping
     public Article createOrUpdateArticle(@RequestBody ArticleDTO dto){
+        return articleService.saveArticle(dto);
+    }
+
+    //更新编辑文章
+    @PutMapping("/{id}")
+    public Article updateArticle(@PathVariable Long id, @RequestBody ArticleDTO dto) {
+        dto.setId(id);
         return articleService.saveArticle(dto);
     }
 
@@ -96,6 +103,13 @@ public class ArticleController {
     {
         return articleService.getArticleByAuthor(author);
     }
+
+    //根据作者名搜索文章
+    @GetMapping("/search/byAuthor")
+    public List<Article> searchByAuthor(@RequestParam String authorName) {
+        return articleService.searchByAuthor(authorName);
+    }
+
 
     //删除文章
     @DeleteMapping("/{id}")

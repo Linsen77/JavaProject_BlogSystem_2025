@@ -9,7 +9,8 @@ public class ArticleDTO {
     private Long id;
     private String title;
     private String content;
-    private List<Long> tags;
+    private List<String> tags;
     private String visibility;
     private Long authorId;
+    private String cover;
 }

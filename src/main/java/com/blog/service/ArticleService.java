@@ -32,19 +32,13 @@ public class ArticleService {
     @Autowired
     private UserRepository userRepository;
 
-    //创建或更新文章
-//    public Article saveArticle(Article article){
-//        //设置创建时间和更新时间
-//        article.setCreateTime((article.getCreateTime() == null? LocalDateTime.now():article.getCreateTime()));
-//        article.setCreateTime(LocalDateTime.now());
-//        return articleRepository.save(article);
-//    }
 
     public Article saveArticle(ArticleDTO dto){
         Article article;
         // 如果是更新文章
         if (dto.getId() != null){
             article = articleRepository.findById(dto.getId()) .orElseThrow(() -> new RuntimeException("Article not found"));
+            article.setCover(dto.getCover());
         }
         else{
             article = new Article();
@@ -59,10 +53,23 @@ public class ArticleService {
         User author = userRepository.findById(dto.getAuthorId()) .orElseThrow(() -> new RuntimeException("User not found")); article.setAuthor(author);
         article.setAuthor(author);
         // 设置标签
-        List<Tag> tags = tagRepository.findAllById(dto.getTags());
-        article.setTags(tags);
+        // 设置标签（支持字符串标签名）
+        List<Tag> tagEntities = new ArrayList<>();
+        for (String tagName : dto.getTags()) {
+            Tag tag = tagRepository.findByName(tagName)
+                    .orElseGet(() -> {
+                        Tag newTag = new Tag();
+                        newTag.setName(tagName);
+                        return tagRepository.save(newTag);
+                    });
+            tagEntities.add(tag);
+        }
+        article.setTags(tagEntities);
         // 更新时间
         article.setUpdateDate(LocalDateTime.now());
+        //设置封面
+        article.setCover(dto.getCover());
+
 
         return articleRepository.save(article);
     }
@@ -101,6 +108,11 @@ public class ArticleService {
     //根据作者获取文章
     public List<Article>getArticleByAuthor(User author){
         return articleRepository.findByAuthor(author); //根据作者查找文章
+    }
+
+    //根据作者名搜索文章
+    public List<Article> searchByAuthor(String authorName) {
+        return articleRepository.findByAuthor_NameContainingIgnoreCase(authorName);
     }
 
     //删除文章
