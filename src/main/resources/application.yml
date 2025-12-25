@@ -28,8 +28,8 @@ spring:
   mail:
     host: smtp.qq.com       # 固定值
     port: 465             # 固定值
-    username: 3313251044@qq.com # 我的QQ邮箱地址
-    password: sqycmffrbgygdaae # 我的QQ邮箱SMTP授权码（不是登录密码！）
+    username: xxxxxxxxxx@qq.com # 我的QQ邮箱地址
+    password: xxxxxxxxxxxxxxxx # 我的QQ邮箱SMTP授权码（不是登录密码！）
     default-encoding: UTF-8
     properties:
       mail:
