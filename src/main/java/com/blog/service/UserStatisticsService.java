@@ -21,12 +21,13 @@ public class UserStatisticsService {
 
     @Autowired
     private BookmarkService bookmarkService;
+    @Autowired private ArticleReadService reads;
 
     // 获取用户统计信息
-    public UserStatisticsDto getUserStatistics(Long userId) {
+    public UserStatisticsDto getUserStatistics(Long userId,Long viewerId) {
 
         //获取用户的文章数
-        long articleCount = articleRepository.countByAuthorId(userId);
+        long articleCount = reads.count(ArticleReadService.Scope.AUTHOR,userId,viewerId);
 
         //获取用户的粉丝数
         long followerCount = followRepository.countByFolloweeId(userId);
@@ -35,10 +36,10 @@ public class UserStatisticsService {
         long  followeeCount = followRepository.countByFollowerId(userId);
 
         //获取用户文章的总点赞数
-        long likeCount = likeRepository.countByArticleAuthorId(userId);
+        long likeCount = reads.visibleAuthorLikes(userId,viewerId);
 
         //获取用户收藏文章数量
-        int bookmarkCount = bookmarkService.countBookmarks(userId);
+        int bookmarkCount = Math.toIntExact(reads.count(ArticleReadService.Scope.BOOKMARKS,userId,viewerId));
 
         return new UserStatisticsDto(articleCount, followerCount, followeeCount, likeCount, bookmarkCount);
     }

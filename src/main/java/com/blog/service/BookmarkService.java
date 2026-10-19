@@ -29,6 +29,7 @@ public class BookmarkService {
     private NotificationService notificationService;
 
     //收藏文章
+    @Transactional
     public Bookmark addBookmark(Long articleId, Long userId){
         //检查文章是否存在
         Article article = articleRepository.findById(articleId).orElseThrow(() -> new RuntimeException("文章不存在"));
@@ -47,12 +48,14 @@ public class BookmarkService {
         bookmark.setArticle(article);
         bookmark.setCreatetime(LocalDateTime.now());
 
+        // Core row must succeed before creating the notification, in the same transaction.
+        Bookmark savedBookmark=bookmarkRepository.saveAndFlush(bookmark);
         //发送通知给作者
         User articleauthor = article.getAuthor();
         notificationService.sendNotificationToAuthor(articleauthor, "你的文章被收藏啦(*^▽^*)");
 
 
-        return bookmarkRepository.save(bookmark);
+        return savedBookmark;
 
     }
 

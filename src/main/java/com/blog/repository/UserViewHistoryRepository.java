@@ -22,5 +22,8 @@ public interface UserViewHistoryRepository
         where h.userId = :userId
     """)
     List<Long> findViewedArticleIds(Long userId); // 返回值是该用户浏览过的所有文章ID列表
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM UserViewHistory h WHERE h.articleId = :articleId")
+    int deleteForArticle(@org.springframework.data.repository.query.Param("articleId") Long articleId);
 }
 

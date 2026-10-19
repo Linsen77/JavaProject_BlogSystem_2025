@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface ArticleRepository extends JpaRepository<Article,Long>{
+public interface ArticleRepository extends JpaRepository<Article,Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Article>{
 
     List<Article> findByAuthor(User author);
 
@@ -60,6 +60,10 @@ public interface ArticleRepository extends JpaRepository<Article,Long>{
 
     @Modifying
     @Query("UPDATE Article a SET a.viewCount = a.viewCount + 1 WHERE a.id = :id")
-    void incrementViewCount(@Param("id") Long id);
+    int incrementViewCount(@Param("id") Long id);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM Article a WHERE a.id = :id")
+    java.util.Optional<Article> lockForDeletion(@Param("id") Long id);
 
 }

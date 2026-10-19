@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ArticleService {
@@ -31,31 +33,57 @@ public class ArticleService {
     private TagRepository tagRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired private com.blog.repository.CommentRepository commentRepository;
+    @Autowired private com.blog.repository.LikeRepository likeRepository;
+    @Autowired private com.blog.repository.BookmarkRepository bookmarkRepository;
 
 
-    public Article saveArticle(ArticleDTO dto){
-        Article article;
-        // 如果是更新文章
-        if (dto.getId() != null){
-            article = articleRepository.findById(dto.getId()) .orElseThrow(() -> new RuntimeException("Article not found"));
-            article.setCover(dto.getCover());
-        }
-        else{
-            article = new Article();
-            article.setCreateTime(LocalDateTime.now());
-        }
+    @Transactional
+    public Article createArticle(ArticleDTO dto, Long actorId) {
+        User author=requireUser(actorId);
+        if (dto.getId()!=null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"创建文章不能指定ID，请使用更新接口");
+        Article article=new Article();
+        article.setAuthor(author);
+        article.setCreateTime(LocalDateTime.now());
+        return applyArticle(article,dto);
+    }
+
+    @Transactional
+    public Article updateArticle(Long id, ArticleDTO dto, Long actorId) {
+        return applyArticle(requireOwnedArticle(id,actorId),dto);
+    }
+
+    private User requireUser(Long actorId) {
+        if(actorId==null)throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"请先登录");
+        return userRepository.findById(actorId).orElseThrow(()->
+                new ResponseStatusException(HttpStatus.UNAUTHORIZED,"登录用户已失效"));
+    }
+
+    private Article requireOwnedArticle(Long id, Long actorId) {
+        requireUser(actorId);
+        Article article=articleRepository.findById(id).orElseThrow(()->
+                new ResponseStatusException(HttpStatus.NOT_FOUND,"文章不存在"));
+        if(article.getAuthor()==null || !actorId.equals(article.getAuthor().getId()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"仅文章作者可以操作");
+        return article;
+    }
+
+    private Article applyArticle(Article article, ArticleDTO dto){
         // 设置标题和内容
         article.setTitle(dto.getTitle());
         article.setContent(dto.getContent());
         // 设置可见性（枚举）
-        article.setVisibility(Article.ArticleVisibility.valueOf(dto.getVisibility().toUpperCase()));
-        // 设置作者
-        User author = userRepository.findById(dto.getAuthorId()) .orElseThrow(() -> new RuntimeException("User not found")); article.setAuthor(author);
-        article.setAuthor(author);
+        try {
+            article.setVisibility(Article.ArticleVisibility.valueOf(dto.getVisibility().toUpperCase(java.util.Locale.ROOT)));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"文章可见范围非法");
+        }
+        // dto.authorId is compatibility input only; never controls author identity.
 
         // 设置标签（支持字符串标签名）
         List<Tag> tagEntities = new ArrayList<>();
-        for (String tagName : dto.getTags()) {
+        for (String tagName : dto.getTags()==null ? List.<String>of() : dto.getTags()) {
             Tag tag = tagRepository.findByName(tagName)
                     .orElseGet(() -> {
                         Tag newTag = new Tag();
@@ -75,22 +103,19 @@ public class ArticleService {
     }
 
     //添加标签到文章
-    public Article addTagsToArticle(Long articleId,List<Long>tagIds){
-        Optional<Article>articleOptional = articleRepository.findById(articleId);
-        if(articleOptional.isPresent()){
-            Article article = articleOptional.get();
+    @Transactional
+    public Article addTagsToArticle(Long articleId,List<Long>tagIds,Long actorId){
+            Article article = requireOwnedArticle(articleId,actorId);
 
             //遍历标签ID并将标签添加到文章
             for(Long tagId:tagIds)
             {
                 //查找标签
-                Tag tag = tagRepository.findById(tagId).orElseThrow(()->new RuntimeException("Tag not found"));
+                Tag tag = tagRepository.findById(tagId).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"标签不存在"));
                 article.getTags().add(tag);//添加标签
             }
             return articleRepository.save(article);//保存更新后的文章
 
-        }
-        throw new RuntimeException("Article not found");
     }
 
 
@@ -116,8 +141,19 @@ public class ArticleService {
     }
 
     //删除文章
-    public void deleteArticle(Long id){
-        articleRepository.deleteById(id);
+    @Transactional
+    public void deleteArticle(Long id,Long actorId){
+        Article article=requireOwnedArticle(id,actorId);
+        article=articleRepository.lockForDeletion(id).orElseThrow(()->
+                new ResponseStatusException(HttpStatus.NOT_FOUND,"文章不存在"));
+        // Delete only dependent rows; users and shared Tag definitions survive.
+        commentRepository.deleteForArticle(id);
+        likeRepository.deleteForArticle(id);
+        bookmarkRepository.deleteForArticle(id);
+        userViewHistoryRepository.deleteForArticle(id);
+        // JPA removes this Article's owning article_tag links before the Article row.
+        articleRepository.delete(article);
+        articleRepository.flush();
     }
 
     //查看粉丝可见的文章
@@ -242,6 +278,15 @@ public class ArticleService {
     @Transactional
     public void incrementViewCount(Long id) {
         articleRepository.incrementViewCount(id);
+    }
+
+    @Transactional
+    public void recordView(Long id,Long viewerId){
+        // UPDATE locks the Article row until the history insert commits; deletion
+        // locks that same row before cleanup. A deleted row must not gain history.
+        if(articleRepository.incrementViewCount(id)==0)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"文章不存在");
+        if(viewerId!=null)userViewHistoryRepository.save(new com.blog.entity.UserViewHistory(viewerId,id,LocalDateTime.now()));
     }
 
 }

@@ -26,6 +26,7 @@ public class LikeService {
     private UserRepository userRepository;
 
     //点赞功能
+    @jakarta.transaction.Transactional
     public Likes addLike(Long articleId, Long userId){
         Article article = articleRepository.findById(articleId).orElseThrow(() -> new RuntimeException("文章不存在"));
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("用户不存在"));

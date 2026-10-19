@@ -8,6 +8,7 @@ import com.blog.repository.ArticleRepository;
 import com.blog.repository.FollowRepository;
 import com.blog.repository.UserRepository;
 import com.blog.service.FollowService;
+import com.blog.service.ArticleReadService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ public class FollowController {
 
     @Autowired
     private FollowService followService;
+    @Autowired private ArticleReadService reads;
 
     @Autowired
     private FollowRepository followRepository;
@@ -87,14 +89,7 @@ public class FollowController {
     //查看关注的人的文章
     @GetMapping("/follow/articles/{userId}")
     public List<Article> getFollowFeed(HttpSession session) {
-        User me = (User) session.getAttribute("loginUser");
-        if (me == null) return List.of();
-
-        //找到我关注的人
-        List<Follows> follows = followRepository.findByFollowerId(me.getId());
-
-        List<Long> followeeIds = follows.stream().map(Follows::getFolloweeId).toList();
-
-        return articleRepository.findByAuthorIdInOrderByCreateTimeDesc(followeeIds);
+        Long viewer=reads.viewerId(session);
+        return reads.list(ArticleReadService.Scope.FEED,viewer,null,viewer);
     }
 }

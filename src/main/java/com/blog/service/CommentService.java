@@ -28,6 +28,7 @@ public class CommentService {
 
 
     //评论文章功能
+    @jakarta.transaction.Transactional
     public Comment addComment(Long articleId, Long userId, String content){
         Article article = articleRepository.findById(articleId).orElseThrow(() -> new RuntimeException("文章不存在"));
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("用户不存在"));

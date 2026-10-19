@@ -37,3 +37,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
+.env
+.env.*
+!.env.example
+__pycache__/
+/data/avatars/

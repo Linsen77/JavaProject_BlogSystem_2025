@@ -3,11 +3,12 @@ package com.blog.controller;
 import com.blog.dto.UserProfileDTO;
 import com.blog.dto.UserStatisticsDto;
 import com.blog.entity.Article;
-import java.io.File;
+import com.blog.service.AvatarStorage;
 import com.blog.entity.User;
 import com.blog.repository.ArticleRepository;
 import com.blog.repository.UserRepository;
 import com.blog.service.ArticleService;
+import com.blog.service.ArticleReadService;
 import com.blog.service.BookmarkService;
 import com.blog.service.FollowService;
 import com.blog.service.UserStatisticsService;
@@ -21,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -37,6 +37,8 @@ public class UserController {
 
     @Autowired
     private ArticleService articleService;
+    @Autowired private ArticleReadService reads;
+    @Autowired private AvatarStorage avatarStorage;
 
     @Autowired
     private UserStatisticsService userStatisticsService;
@@ -46,25 +48,9 @@ public class UserController {
 
     //访问某个用户主页
     @GetMapping("/{userId}")
-    public UserProfileDTO getUserProfile(@PathVariable Long userId,  @RequestParam(required = false) Long viewerId){
-
-        User user = userRepository.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
-        List<Article> articles;
-
-        //自己查看自己的主页：查看所有文章
-        if(viewerId != null && viewerId.equals(user.getId())) {
-            articles = articleService.getAllArticles();
-        }
-        //粉丝查看：公开+粉丝可见的文章
-        else if(viewerId != null && followService.isFollowing(viewerId, user.getId())) {
-            articles = articleService.findVisibleToFollowers(userId);
-        }
-        //陌生人查看：公开的文章
-        else{
-            articles = articleService.findByAuthorIdAndVisibility(userId, Article.ArticleVisibility.PUBLIC);
-        }
-
-        return new UserProfileDTO(user,articles);
+    public UserProfileDTO getUserProfile(@PathVariable Long userId,@RequestParam(required=false) Long viewerId,HttpSession session) {
+        User user=userRepository.findById(userId).orElseThrow(()->new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND,"用户不存在"));
+        return new UserProfileDTO(user,reads.list(ArticleReadService.Scope.AUTHOR,userId,null,reads.viewerId(session)));
     }
 
     //获取当前登录用户信息
@@ -79,9 +65,8 @@ public class UserController {
 
     //获取用户的文章数，粉丝数和点赞数
     @GetMapping("/{userId}/status")
-    public ResponseEntity<UserStatisticsDto> getUserStatistics(@PathVariable Long userId) {
-        UserStatisticsDto statistics = userStatisticsService.getUserStatistics(userId);
-        return ResponseEntity.ok(statistics);
+    public ResponseEntity<UserStatisticsDto> getUserStatistics(@PathVariable Long userId,HttpSession session) {
+        return ResponseEntity.ok(userStatisticsService.getUserStatistics(userId,reads.viewerId(session)));
     }
 
     // 更新当前用户资料
@@ -110,14 +95,13 @@ public class UserController {
 
         // 如果上传了头像
         if (avatar != null && !avatar.isEmpty()) {
-            String fileName = UUID.randomUUID().toString() + ".png";
-            String path = "C:/Users/33132/Desktop/Java_2025/BlogSystem/avatar/" + fileName;
             try {
-                avatar.transferTo(new File(path));
+                user.setAvatarUrl(avatarStorage.save(avatar));
             } catch (Exception e) {
-                return ResponseEntity.status(500).body("头像上传失败");
+                return ResponseEntity.status(500)
+                        .contentType(new MediaType("text", "plain", java.nio.charset.StandardCharsets.UTF_8))
+                        .body("头像上传失败");
             }
-            user.setAvatarUrl("http://localhost:8080/avatar/" + fileName);
         }
 
         user.setUpdateAt(LocalDateTime.now());
@@ -126,7 +110,6 @@ public class UserController {
         // 更新 session
         session.setAttribute("loginUser", user);
 
-        System.out.println("avatar = " + avatar);
 
 
         return ResponseEntity.ok(user);
@@ -134,9 +117,8 @@ public class UserController {
 
     //查看用户收藏的文章
     @GetMapping("/bookmarks/{userId}")
-    public ResponseEntity<List<Article>> getUserBookmarks(@PathVariable("userId") Long userId) {
-        List<Article> bookmarkArticles = bookmarkService.getBookmarks(userId);
-        return ResponseEntity.ok(bookmarkArticles);
+    public ResponseEntity<List<Article>> getUserBookmarks(@PathVariable Long userId,HttpSession session) {
+        return ResponseEntity.ok(reads.list(ArticleReadService.Scope.BOOKMARKS,userId,null,reads.viewerId(session)));
     }
 
 

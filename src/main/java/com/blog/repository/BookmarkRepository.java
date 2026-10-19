@@ -25,4 +25,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     //取消收藏
     @Transactional
     void deleteByUserIdAndArticleId(Long userId, Long articleId);
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM Bookmark b WHERE b.article.id = :articleId")
+    int deleteForArticle(@org.springframework.data.repository.query.Param("articleId") Long articleId);
 }

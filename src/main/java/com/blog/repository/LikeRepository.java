@@ -6,7 +6,7 @@ import com.blog.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface LikeRepository extends JpaRepository<Likes, Long> {
+public interface LikeRepository extends JpaRepository<Likes, Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Likes> {
 
     //判断用户是否已点赞这篇文章
     boolean existsByUserAndArticle(User user, Article article);
@@ -22,5 +22,8 @@ public interface LikeRepository extends JpaRepository<Likes, Long> {
     int countByArticleId(Long articleId);
 
     Likes findByArticleIdAndUserId(Long articleId, Long userId);
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM Likes l WHERE l.article.id = :articleId")
+    int deleteForArticle(@org.springframework.data.repository.query.Param("articleId") Long articleId);
 
 }
